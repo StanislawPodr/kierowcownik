@@ -1,0 +1,27 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/static:/srv/static
+      - $PWD/media:/srv/media
+      - caddy_data:/data
+      - caddy_config:/config
+  django:
+    build: ./app
+    volumes:
+      - ./app:/app
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=1234
+
+volumes:
+  caddy_data:
+  caddy_config:
