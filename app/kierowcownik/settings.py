@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'accounts',
-    "questions.apps.QuestionsConfig",
+    "questions",
 ]
 
 MIDDLEWARE = [

@@ -23,8 +23,8 @@ class Question(models.Model):
         photo = 'P', _('photo')
         video = 'V', _('video')
 
-    question_number = models.IntegerField()
-    question_text = models.TextField(max_length=500, unique=True)
+    question_number = models.IntegerField(unique=True)
+    question_text = models.TextField(max_length=500)
     is_basic = models.BooleanField(default=True)
     answer_A = models.TextField(max_length=500, blank=True, default='')
     answer_B = models.TextField(max_length=500, blank=True, default='')
