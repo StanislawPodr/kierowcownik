@@ -217,3 +217,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 /katalog_dla_kandydatów_na_kierowców_052026xlsx.xlsx
+/resources/
+/app/resources/

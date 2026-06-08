@@ -1,6 +1,7 @@
 import pandas as pd
 from django.core.management import BaseCommand
 
+from questions.management.commands.common import print_missing_files
 from questions.models import Categories, Question
 
 
@@ -19,6 +20,7 @@ class Command(BaseCommand):
         file_path = kwargs['file_path']
         questions = pd.read_excel(file_path)
         questions = questions.dropna(subset=['Pytanie'])
+        questions = questions.fillna('')
 
         def save_question(question):
             if question._2 is None or str(question._2).strip() == "":
@@ -37,8 +39,8 @@ class Command(BaseCommand):
                 answer_B=question._5,
                 answer_C=question._6,
                 correct_answer=question._7,
-                media_url=question.Media,
-                url_type=Question.UrlType.video if str(question.Media).endswith(".wmv") else Question.UrlType.photo,
+                media_url="resources/" + str(question.Media) if question.Media else "",
+                url_type="" if str(question.Media).__eq__("") else  Question.UrlType.video if str(question.Media).endswith(".wmv") else Question.UrlType.photo,
                 number_of_points=question._10,
             )
             if created:
@@ -46,3 +48,5 @@ class Command(BaseCommand):
 
         for i in questions.itertuples():
             save_question(i)
+
+        print_missing_files()

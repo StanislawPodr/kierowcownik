@@ -24,3 +24,12 @@ Szczegóły JSON: docs/api-contract.md
 cd app
 python3 manage.py test accounts
 ```
+
+## Dane
+Link do strony z danymi: https://www.gov.pl/web/infrastruktura/prawo-jazdy 
+
+Załadowanie danych do bazy (plik z pytaniami oraz pliki z video):
+```bash
+python manage.py parse_questions "plik.xlsx"   
+python manage.py add_resources "plik.zip" "plik.zip" ...
+```
