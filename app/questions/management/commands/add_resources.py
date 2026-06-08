@@ -1,0 +1,29 @@
+from zipfile import ZipFile
+from pathlib import Path
+from django.core.management import BaseCommand
+import os.path
+from questions.management.commands.common import flatten_file_structure, print_missing_files
+
+
+class Command(BaseCommand):
+    help = 'Add resources for questions'
+
+    def add_arguments(self, parser):
+        parser.add_argument('files', nargs='+', help='zip file with resources for questions')
+        parser.add_argument('--reset',action='store_true', help='deletes old files')
+
+    def handle(self, *args, **kwargs):
+        end_url = 'resources'
+
+        if not os.path.exists(end_url):
+            os.makedirs(end_url)
+        if kwargs['reset']:
+            for item in Path(end_url).iterdir():
+                item.unlink()
+
+        for file in kwargs['files']:
+            with ZipFile(file, 'r') as zObject:
+                zObject.extractall(path=end_url)
+
+        flatten_file_structure(end_url)
+        print_missing_files()
