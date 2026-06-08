@@ -33,3 +33,5 @@ Załadowanie danych do bazy (plik z pytaniami oraz pliki z video):
 python manage.py parse_questions "plik.xlsx"   
 python manage.py add_resources "plik.zip" "plik.zip" ...
 ```
+
+Dodając flagę --reset usuwane są stare dane przed dodaniem nowych.
