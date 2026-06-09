@@ -219,3 +219,7 @@ __marimo__/
 /katalog_dla_kandydatów_na_kierowców_052026xlsx.xlsx
 /resources/
 /app/resources/
+
+*.xlsx
+*.zip
+*.rar
