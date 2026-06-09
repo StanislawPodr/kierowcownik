@@ -23,7 +23,7 @@ class WordExamView(APIView):
     Zwraca test w formacie egzaminu na prawo jazdy kat. B:
     20 losowych pytań podstawowych + 12 losowych specjalistycznych z kategorii B.
     """
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
         try:
@@ -60,7 +60,7 @@ class CategoryExamView(APIView):
     Zwraca losowy test z podanej kategorii:
     20 pytań podstawowych + 12 specjalistycznych (lub mniej, jeśli baza nie ma tylu).
     """
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def get(self, request, symbol):
         category = get_object_or_404(Categories, symbol__iexact=symbol)
@@ -90,7 +90,7 @@ class CategoryListView(APIView):
 
     Zwraca listę wszystkich dostępnych kategorii.
     """
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
         from .serializers import CategorySerializer
