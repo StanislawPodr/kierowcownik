@@ -5,6 +5,8 @@ import os.path
 from questions.management.commands.common import flatten_file_structure, print_missing_files, \
     directory_convert_wmv_to_mp4
 
+from kierowcownik.settings import MEDIA_FOLDER
+
 
 class Command(BaseCommand):
     help = 'Add resources for questions'
@@ -14,7 +16,7 @@ class Command(BaseCommand):
         parser.add_argument('--reset',action='store_true', help='deletes old files')
 
     def handle(self, *args, **kwargs):
-        end_url = 'resources'
+        end_url = str(MEDIA_FOLDER)
 
         if not os.path.exists(end_url):
             os.makedirs(end_url)
@@ -28,4 +30,3 @@ class Command(BaseCommand):
 
         flatten_file_structure(end_url)
         directory_convert_wmv_to_mp4(end_url)
-        print_missing_files()

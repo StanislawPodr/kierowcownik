@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ALLOWED_HOSTS = []
 
 
-DEBUG = bool(os.environ.get("DEBUG", default=1)) 
+DEBUG = bool(os.environ.get("DEBUG", default=1))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = (
@@ -86,7 +86,7 @@ WSGI_APPLICATION = "kierowcownik.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": BASE_DIR / "data" / "db.sqlite3",
     }
 }
 
@@ -142,16 +142,10 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
 ]
-STATIC_URL = "static/"
 
-_resources_in_app = BASE_DIR / "resources"
-_resources_in_repo = BASE_DIR.parent / "resources"
-if _resources_in_app.is_dir() and any(_resources_in_app.iterdir()):
-    RESOURCES_ROOT = _resources_in_app
-elif _resources_in_repo.is_dir():
-    RESOURCES_ROOT = _resources_in_repo
-else:
-    RESOURCES_ROOT = _resources_in_app
+STATIC_URL = "static/"
+SERVER_DOMAIN = os.environ.get("SERVER_DOMAIN", default="http://127.0.0.1")
+MEDIA_FOLDER = os.environ.get("MEDIA_FOLDER", default=Path("media"))

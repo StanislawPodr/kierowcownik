@@ -5,7 +5,7 @@ from pathlib import Path
 from moviepy import VideoFileClip
 
 from questions.models import Question
-
+from kierowcownik.settings import BASE_DIR
 
 def flatten_file_structure(directory):
     path = Path(directory)
@@ -37,5 +37,5 @@ def print_missing_files():
     questions = Question.objects.all()
 
     for question in questions:
-        if question.media_url !="" and not Path(question.media_url).is_file():
-            print(f"Missing file: ${question.media_url}")
+        if question.media_url !="" and not (BASE_DIR / Path(question.media_url)).is_file():
+            print(f"Missing file: {question.media_url}")
