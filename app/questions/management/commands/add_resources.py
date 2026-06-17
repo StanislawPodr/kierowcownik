@@ -2,7 +2,8 @@ from zipfile import ZipFile
 from pathlib import Path
 from django.core.management import BaseCommand
 import os.path
-from questions.management.commands.common import flatten_file_structure, print_missing_files
+from questions.management.commands.common import flatten_file_structure, print_missing_files, \
+    directory_convert_wmv_to_mp4
 
 
 class Command(BaseCommand):
@@ -26,4 +27,5 @@ class Command(BaseCommand):
                 zObject.extractall(path=end_url)
 
         flatten_file_structure(end_url)
+        directory_convert_wmv_to_mp4(end_url)
         print_missing_files()

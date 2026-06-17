@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 answer_B=question._5,
                 answer_C=question._6,
                 correct_answer=question._7,
-                media_url="resources/" + str(question.Media) if question.Media else "",
+                media_url="resources/" + str(question.Media).replace('.wmv','.mp4') if question.Media else "",
                 url_type="" if str(question.Media).__eq__("") else  Question.UrlType.video if str(question.Media).endswith(".wmv") else Question.UrlType.photo,
                 number_of_points=question._10,
             )
