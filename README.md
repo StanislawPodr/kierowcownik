@@ -16,10 +16,10 @@ POST    `/api/auth/login/`
 POST    `/api/auth/refresh/`
 GET     `/api/auth/me/`
 
-(wymagają nagłówka Authorization: Bearer <access>)
-GET     '/api/questions/exam/word/'
-GET     '/api/questions/exam/category/<symbol>/'
-GET     '/api/questions/categories/'
+GET     `/api/questions/exam/word/`
+GET     `/api/questions/exam/category/<symbol>/`
+GET     `/api/questions/categories/`
+
 
 Szczegóły JSON: docs/api-contract.md
 
