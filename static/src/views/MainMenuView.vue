@@ -5,26 +5,25 @@
     </header>
 
     <div class="content-wrapper">
-
       <div class="side-image left">
-        <img src="/znak-nauki-jazdy.png" alt="Dekoracja lewa" />
+        <img :src="leftImage" alt="Dekoracja lewa" />
       </div>
 
       <nav class="menu-actions">
-        <router-link to="/strona-pierwsza" class="menu-btn">Rozpocznij test</router-link>
-        <router-link to="/strona-druga" class="menu-btn">Statystyki</router-link>
+        <router-link to="/egzamin" class="menu-btn">Rozpocznij test</router-link>
+        <router-link to="/statystyki" class="menu-btn">Statystyki</router-link>
       </nav>
 
       <div class="side-image right">
-        <img src="/kolo-zebate.PNG" alt="Dekoracja prawa" />
+        <img :src="rightImage" alt="Dekoracja prawa" />
       </div>
-
     </div>
   </div>
 </template>
 
-<script setup>
-// Tutaj dodasz logikę
+<script setup lang="ts">
+import leftImage from '../assets/znak-nauki-jazdy.png'
+import rightImage from '../assets/kolo-zebate.png'
 </script>
 
 <style scoped>
@@ -34,7 +33,6 @@
   align-items: center;
   padding: 2rem;
   font-family: Arial, sans-serif;
-
   background-color: #615d5d;
   background-image: repeating-linear-gradient(
     45deg,
@@ -43,7 +41,6 @@
     #615d5d 10px,
     #615d5d 20px
   );
-
   min-height: 100vh;
   width: 100%;
 }
@@ -65,21 +62,17 @@
   margin-top: 2rem;
 }
 
-
-/* --- Podstawowe style dla obu obrazków (wielkość) --- */
 .side-image img {
   width: 250px;
   height: 250px;
   object-fit: contain;
-  /* Usunęliśmy stąd właściwość 'animation' */
+  border-radius: 8px;
 }
 
-/* --- NOWE: Animacja nałożona TYLKO na prawy obrazek --- */
 .side-image.right img {
   animation: spin 10s linear infinite;
 }
 
-/* Definicja animacji obracania */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -87,17 +80,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-
-.side-image img {
-  width: 250px;
-  height: 250px;
-
-  object-fit: contain;
-
-
-  border-radius: 8px;
 }
 
 .menu-actions {
@@ -112,7 +94,6 @@
   width: 100%;
   box-sizing: border-box;
   text-align: center;
-
   padding: 24px 48px;
   background-color: #e53935;
   color: white;
@@ -131,5 +112,9 @@
 .menu-btn:active {
   transform: translateY(2px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-btn.router-link-active {
+  background-color: #b71c1c;
 }
 </style>

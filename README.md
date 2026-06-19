@@ -9,6 +9,17 @@ python3 manage.py migrate
 python3 manage.py runserver
 ```
 
+Frontend (egzamin testowy) w folderze `static/` (Vue 3):
+
+```bash
+cd static
+npm install
+npm run dev          # dev: http://localhost:5173 (proxy do API)
+npm run build        # produkcja: pliki w static/dist/
+```
+
+Po `npm run build` otwórz `http://127.0.0.1:8000/` (Django serwuje `static/dist/`).
+
 
 Endpointy
 POST    `/api/auth/register/`

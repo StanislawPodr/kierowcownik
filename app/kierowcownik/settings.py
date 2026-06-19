@@ -146,3 +146,12 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5173',
 ]
 STATIC_URL = "static/"
+
+_resources_in_app = BASE_DIR / "resources"
+_resources_in_repo = BASE_DIR.parent / "resources"
+if _resources_in_app.is_dir() and any(_resources_in_app.iterdir()):
+    RESOURCES_ROOT = _resources_in_app
+elif _resources_in_repo.is_dir():
+    RESOURCES_ROOT = _resources_in_repo
+else:
+    RESOURCES_ROOT = _resources_in_app
