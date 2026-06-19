@@ -22,7 +22,7 @@ def convert_wmv_to_mp4(file_path):
     full_path = str(Path(file_path).resolve())
     output_path = full_path.replace('.wmv', '.mp4')
     clip = VideoFileClip(str(file_path))
-    clip.write_videofile(str(output_path), codec="libx264")
+    clip.write_videofile(str(output_path), codec="libx264",threads=4)
     clip.close()
     os.remove(full_path)
 
