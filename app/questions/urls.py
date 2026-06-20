@@ -1,11 +1,15 @@
 from django.urls import path
 
+
 from .views import (
     CategoryExamView,
     CategoryListView,
     WordExamView,
     AllQuestionsView,
     RandomQuestionsView,
+    CategoryQuestionsMetaView, 
+    CategoryQuestionSequentialView, 
+    CategoryQuestionsView
 )
 
 urlpatterns = [
@@ -26,5 +30,7 @@ urlpatterns = [
         RandomQuestionsView.as_view(),
         name="random-question",
     ),
+    path('category/<str:symbol>/meta/', CategoryQuestionsMetaView.as_view()),
+    path('category/<str:symbol>/sequential/', CategoryQuestionSequentialView.as_view()),
+    path('category/<str:symbol>/', CategoryQuestionsView.as_view())
 ]
-

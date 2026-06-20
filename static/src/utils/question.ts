@@ -12,9 +12,9 @@ export interface Question {
   number_of_points: number
 }
 
-export type AnswerChoice = 'A' | 'B' | 'C' | 'T' | 'F'
+export type AnswerChoice = 'A' | 'B' | 'C' | 'T' | 'N'
 
-export function isAbc(question: Question): boolean {
+export function isAbc(question: Question): boolean {''
   return [question.answer_A, question.answer_B, question.answer_C].some(
     (t) => String(t || '').trim() !== '',
   )

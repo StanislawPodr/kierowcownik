@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { fetchWordExam } from '../api/questions'
 import ExamResult from '../components/ExamResult.vue'
 import QuestionCard from '../components/QuestionCard.vue'
+import { markQuestionsAsWrong } from '../composables/useMarkedQuestions'
 import { calculateScore } from '../utils/examScore'
 import type { AnswerChoice, Question } from '../utils/question'
 import {useRoute} from "vue-router";
@@ -37,10 +38,26 @@ async function startExam() {
 
 function onNext() {
   if (index.value >= questions.value.length - 1) {
-    screen.value = 'result'
+    finishExam()
     return
   }
   index.value += 1
+}
+
+function finishExam() {
+
+  const cat = String(route.params.cat)
+
+  const wrongIds = questions.value
+
+    .filter((q, i) => answers.value[i] !== q.correct_answer)
+
+    .map((q) => q.id)
+
+  markQuestionsAsWrong(cat, wrongIds)
+
+  screen.value = 'result'
+
 }
 
 function setAnswer(value: AnswerChoice) {
