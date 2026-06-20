@@ -64,10 +64,8 @@ import {Categories} from "../utils/categories";
 const wybranyParametr = ref<string>('')
 const listaOpcji = ref<Categories[]>([])
 
-// Nowa zmienna kontrolująca, czy okienko z kategoriami jest otwarte
 const czyListaOtwarta = ref<boolean>(false)
 
-// Funkcja wybierająca opcję i zamykająca okienko
 function wybierzOpcje(symbol: string) {
   wybranyParametr.value = symbol
   czyListaOtwarta.value = false
@@ -185,16 +183,14 @@ onMounted(async () => {
 .menu-btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
 .menu-btn.router-link-active { background-color: #b71c1c; }
 
-/* --- STYLE DLA NOWEJ LISTY (CUSTOM DROPDOWN) --- */
 
 .custom-select-wrapper {
   position: absolute;
-  right: 8px; /* Kwadrat jest teraz po prawej stronie! */
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
 }
 
-/* Sam kwadratowy przycisk */
 .menu-select-btn {
   width: 48px;
   height: 48px;
@@ -209,7 +205,6 @@ onMounted(async () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: background-color 0.2s ease;
 
-  /* Centrujemy tekst idealnie na środku */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,26 +214,22 @@ onMounted(async () => {
   background-color: #8e1515;
 }
 
-/* Rozwijane menu z opcjami */
 .custom-dropdown {
   position: absolute;
   top: 100%;
-  right: 0; /* Wyjustowane do prawej krawędzi przycisku */
+  right: 0;
   margin-top: 8px;
   background-color: #ffffff;
   border-radius: 8px;
   padding: 8px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 100; /* Z-index żeby okienko przykryło przycisk "Statystyki" poniżej */
-
-  /* KLUCZOWE: CSS Grid tworzący układ 3-kolumnowy */
+  z-index: 100;
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 równe kolumny */
-  gap: 6px; /* Odstępy między opcjami */
-  width: 160px; /* Szerokość okienka */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 160px;
 }
 
-/* Wygląd pojedynczej opcji na liście */
 .dropdown-item {
   padding: 8px 4px;
   text-align: center;
@@ -252,10 +243,9 @@ onMounted(async () => {
 }
 
 .dropdown-item:hover {
-  background-color: #dcdcdc; /* Lekkie przyciemnienie po najechaniu */
+  background-color: #dcdcdc;
 }
 
-/* Opcja aktualnie wybrana (podświetlona na czerwono) */
 .dropdown-item.active {
   background-color: #e53935;
   color: white;
