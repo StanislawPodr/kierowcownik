@@ -11,3 +11,6 @@ django-cors-headers==4.9.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 PyJWT==2.11.0
+pandas==2.2.3
+openpyxl==3.1.5
+moviepy==2.2.1

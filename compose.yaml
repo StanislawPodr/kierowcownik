@@ -15,13 +15,17 @@ services:
       - caddy_data:/data
       - caddy_config:/config
   django:
-    build: ./app
+    build: $PWD/app
     volumes:
-      - ./app:/app
+      - $PWD/app:/app
+      - $PWD/data:/app/data
+      - $PWD/import:/app/import
+      - $PWD/media:/app/media
     environment:
       - DEBUG=1
       - SECRET_KEY=1234
-
+#      - DATA_XLSX=/app/import/katalog_dla_kandydatów_na_kierowców_052026xlsx.xlsx
+#      - RESOURCES_ZIP=/app/import/multimedia_do_pytan.zip /app/import/Multimedia_do_pytań_-_cz_2_02042026.zip
 volumes:
   caddy_data:
   caddy_config:

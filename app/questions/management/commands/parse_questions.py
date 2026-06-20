@@ -4,28 +4,30 @@ from django.core.management import BaseCommand
 from questions.management.commands.common import print_missing_files
 from questions.models import Categories, Question
 
+from kierowcownik.settings import MEDIA_FOLDER
+
 
 class Command(BaseCommand):
-    description = 'Question Parser'
-    help = 'Takes data from xlsx file from https://www.gov.pl/web/infrastruktura/prawo-jazdy and saves it to database'
+    description = "Question Parser"
+    help = "Takes data from xlsx file from https://www.gov.pl/web/infrastruktura/prawo-jazdy and saves it to database"
 
     def add_arguments(self, parser):
-        parser.add_argument('file_path', help='path to file with questions')
-        parser.add_argument('--reset', action='store_true', help='reset database')
+        parser.add_argument("file_path", help="path to file with questions")
+        parser.add_argument("--reset", action="store_true", help="reset database")
 
     def handle(self, *args, **kwargs):
-        if kwargs['reset']:
+        if kwargs["reset"]:
             Question.objects.all().delete()
             Categories.objects.all().delete()
-        file_path = kwargs['file_path']
+        file_path = kwargs["file_path"]
         questions = pd.read_excel(file_path)
-        questions = questions.dropna(subset=['Pytanie'])
-        questions = questions.fillna('')
+        questions = questions.dropna(subset=["Pytanie"])
+        questions = questions.fillna("")
 
         def save_question(question):
             if question._2 is None or str(question._2).strip() == "":
                 return
-            categories = str(question.Kategorie).split(',')
+            categories = str(question.Kategorie).split(",")
             returned_categories = []
             for category in categories:
                 cat_obj, created = Categories.objects.get_or_create(symbol=category)
@@ -39,8 +41,16 @@ class Command(BaseCommand):
                 answer_B=question._5,
                 answer_C=question._6,
                 correct_answer=question._7,
-                media_url="resources/" + str(question.Media).replace('.wmv','.mp4') if question.Media else "",
-                url_type="" if str(question.Media).__eq__("") else  Question.UrlType.video if str(question.Media).endswith(".wmv") else Question.UrlType.photo,
+                media_url=str(MEDIA_FOLDER)+ '/' + str(question.Media).replace('.wmv','.mp4') if question.Media else "",
+                url_type=(
+                    ""
+                    if str(question.Media).__eq__("")
+                    else (
+                        Question.UrlType.video
+                        if str(question.Media).endswith(".wmv")
+                        else Question.UrlType.photo
+                    )
+                ),
                 number_of_points=question._10,
             )
             if created:

@@ -227,3 +227,7 @@ static/.vite/
 *.xlsx
 *.zip
 *.rar
+
+data/*
+import/*
+media/*
