@@ -6,3 +6,9 @@ export async function fetchWordExam(cat: string | RouteParamValue[]): Promise<{ 
   if (!res.ok) throw new Error('Błąd pobierania danych')
   return res.json()
 }
+
+export async function fetchCategoryQuestions(cat: string | RouteParamValue[]): Promise<Question[]> {
+  const res = await fetch(`/api/questions/category/${cat}`)
+  if (!res.ok) throw new Error('Błąd pobierania danych')
+  return res.json()
+}
