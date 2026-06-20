@@ -32,12 +32,17 @@ export interface SequentialFilters {
   type?: 'basic' | 'specialist'
   points?: number
   ids?: number[]
+  excludeIds?: number[]
+  statusFilter?: string
 }
  
 export interface SequentialQuestionResponse {
   category: string
   total: number
+  unseen_total: number
   offset: number
+  first_unseen_offset: number
+  next_unseen_offset: number | null
   question: Question | null
 }
  
@@ -51,6 +56,8 @@ export async function fetchSequentialQuestion(
   if (filters.type) params.set('type', filters.type)
   if (filters.points !== undefined) params.set('points', String(filters.points))
   if (filters.ids && filters.ids.length) params.set('ids', filters.ids.join(','))
+  if (filters.excludeIds && filters.excludeIds.length) params.set('exclude_ids', filters.excludeIds.join(','))
+  if (filters.statusFilter) params.set('status_filter', filters.statusFilter)
  
   const res = await fetch(`/api/questions/category/${cat}/sequential?${params.toString()}`)
   if (!res.ok) throw new Error('Błąd pobierania pytania')

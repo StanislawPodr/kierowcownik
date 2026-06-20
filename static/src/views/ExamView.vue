@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { fetchWordExam } from '../api/questions'
 import ExamResult from '../components/ExamResult.vue'
 import QuestionCard from '../components/QuestionCard.vue'
-import { markQuestionsAsWrong } from '../composables/useMarkedQuestions'
+import { useUserProgress } from '../composables/useUserProgress'
 import { calculateScore } from '../utils/examScore'
 import type { AnswerChoice, Question } from '../utils/question'
 import {useRoute} from "vue-router";
@@ -16,6 +16,8 @@ const questions = ref<Question[]>([])
 const answers = ref<(AnswerChoice | null)[]>([])
 const index = ref(0)
 const route = useRoute()
+const { isMarked, toggleMarked, markAsWrong, removeFromWrong, markAsSeen, saveProgress } = useUserProgress()
+
 const result = computed(() =>
   screen.value === 'result' ? calculateScore(questions.value, answers.value) : null,
 )
@@ -44,20 +46,22 @@ function onNext() {
   index.value += 1
 }
 
-function finishExam() {
+async function finishExam() {
+  questions.value.forEach((q, i) => {
+    const ans = answers.value[i]
+    if (ans !== null) {
+      markAsSeen(q.id)
+      const correct = String(ans).toUpperCase() === String(q.correct_answer).trim().toUpperCase()
+      if (correct) {
+        removeFromWrong(q.id)
+      } else {
+        markAsWrong(q.id)
+      }
+    }
+  })
 
-  const cat = String(route.params.cat)
-
-  const wrongIds = questions.value
-
-    .filter((q, i) => answers.value[i] !== q.correct_answer)
-
-    .map((q) => q.id)
-
-  markQuestionsAsWrong(cat, wrongIds)
-
+  await saveProgress()
   screen.value = 'result'
-
 }
 
 function setAnswer(value: AnswerChoice) {
@@ -93,6 +97,8 @@ onMounted(() => {
     :index="index"
     :total="questions.length"
     :model-value="answers[index]"
+    :marked="isMarked(questions[index].id)"
+    @toggle-marked="toggleMarked"
     @update:model-value="setAnswer"
     @next="onNext"
   />

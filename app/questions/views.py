@@ -3,7 +3,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Categories, Question
+from .models import Categories, Question, UserProgress
 from .serializers import QuestionSerializer
 
 BASIC_COUNT = 20
@@ -135,15 +135,6 @@ class CategoryQuestionsMetaView(APIView):
 
 
 class CategoryQuestionSequentialView(APIView):
-    """
-    GET /api/questions/category/<symbol>/sequential/
-    Zwraca pytanie z danej pozycji (offset) w przefiltrowanym zbiorze pytań kategorii (sekwencyjne ładowanie pytań w trybie nauki).
-    - offset: pozycja pytania w przefiltrowanej liście (domyślnie 0)
-    - type: 'basic' | 'specialist'
-    - points: 
-    - ids: lista ID pytań oddzielona przecinkami, np. ?ids=12,45,67
-    (sortowanie po question number)
-    """
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, symbol):
@@ -166,41 +157,119 @@ class CategoryQuestionSequentialView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+        # Retrieve query parameters
+        ids = None
         ids_param = request.query_params.get('ids')
         if ids_param:
             try:
                 ids = [int(v) for v in ids_param.split(',') if v.strip() != '']
             except ValueError:
                 return Response(
-                    {'detail': 'Parametr ids musi być listą liczb oddzielonych przecinkami.'},
+                    {'detail': 'Parametr ids musi być listą liczb.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+        exclude_ids = []
+        exclude_ids_param = request.query_params.get('exclude_ids')
+        if exclude_ids_param:
+            try:
+                exclude_ids = [int(v) for v in exclude_ids_param.split(',') if v.strip() != '']
+            except ValueError:
+                return Response(
+                    {'detail': 'Parametr exclude_ids musi być listą liczb.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        status_filter = request.query_params.get('status_filter')
+
+        # If authenticated, merge with database records
+        if request.user.is_authenticated:
+            try:
+                progress = UserProgress.objects.get(user=request.user)
+                
+                db_ids = None
+                if status_filter == 'markedOnly':
+                    db_ids = progress.marked_questions
+                elif status_filter == 'wrongOnly':
+                    db_ids = progress.wrong_questions
+                
+                if db_ids is not None:
+                    if ids is not None:
+                        ids = list(set(ids + db_ids))
+                    else:
+                        ids = db_ids
+                
+                if status_filter != 'markedOnly' and status_filter != 'wrongOnly':
+                    exclude_ids = list(set(exclude_ids + progress.seen_questions))
+            except UserProgress.DoesNotExist:
+                pass
+
+        if ids is not None:
             qs = qs.filter(id__in=ids)
 
         qs = qs.order_by('question_number')
         total = qs.count()
 
+        # Calculate unseen count and offsets on IDs list (extremely fast)
+        ids_list = list(qs.values_list('id', flat=True))
+        exclude_ids_set = set(exclude_ids)
+        unseen_ids = [q_id for q_id in ids_list if q_id not in exclude_ids_set]
+        unseen_total = len(unseen_ids)
+
+        first_unseen_offset = 0
+        for idx, q_id in enumerate(ids_list):
+            if q_id not in exclude_ids_set:
+                first_unseen_offset = idx
+                break
+
         try:
-            offset = int(request.query_params.get('offset', 0))
+            offset = int(request.query_params.get('offset', -1))
         except ValueError:
             return Response(
                 {'detail': 'Parametr offset musi być liczbą.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if offset < 0 or offset >= total:
+        if offset == -1:
+            offset = first_unseen_offset
+
+        if offset < 0 or (total > 0 and offset >= total):
             return Response({
                 'category': category.symbol,
                 'total': total,
+                'unseen_total': unseen_total,
                 'offset': offset,
+                'first_unseen_offset': first_unseen_offset,
+                'next_unseen_offset': None,
                 'question': None,
             })
+
+        if total == 0:
+            return Response({
+                'category': category.symbol,
+                'total': total,
+                'unseen_total': unseen_total,
+                'offset': offset,
+                'first_unseen_offset': first_unseen_offset,
+                'next_unseen_offset': None,
+                'question': None,
+            })
+
+        # Calculate the next unseen offset starting from offset + 1
+        next_unseen_offset = None
+        for idx in range(offset + 1, len(ids_list)):
+            if ids_list[idx] not in exclude_ids_set:
+                next_unseen_offset = idx
+                break
 
         question = qs[offset:offset + 1].first()
         return Response({
             'category': category.symbol,
             'total': total,
+            'unseen_total': unseen_total,
             'offset': offset,
+            'first_unseen_offset': first_unseen_offset,
+            'next_unseen_offset': next_unseen_offset,
             'question': QuestionSerializer(question).data,
         })
 
@@ -260,4 +329,55 @@ class RandomQuestionsView(APIView):
             'total': 1,
             'questions': QuestionSerializer(sample_question.first()).data,
         })
+
+
+class UserProgressView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        progress, created = UserProgress.objects.get_or_create(user=request.user)
+        return Response({
+            'wrong_questions': progress.wrong_questions,
+            'marked_questions': progress.marked_questions,
+            'seen_questions': progress.seen_questions,
+        })
+
+    def post(self, request):
+        progress, created = UserProgress.objects.get_or_create(user=request.user)
+
+        wrong = request.data.get('wrong_questions')
+        marked = request.data.get('marked_questions')
+        seen = request.data.get('seen_questions')
+
+        if wrong is not None:
+            if not isinstance(wrong, list):
+                return Response({'detail': 'wrong_questions must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                progress.wrong_questions = list(set(int(x) for x in wrong))
+            except (ValueError, TypeError):
+                return Response({'detail': 'wrong_questions contains invalid IDs'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if marked is not None:
+            if not isinstance(marked, list):
+                return Response({'detail': 'marked_questions must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                progress.marked_questions = list(set(int(x) for x in marked))
+            except (ValueError, TypeError):
+                return Response({'detail': 'marked_questions contains invalid IDs'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if seen is not None:
+            if not isinstance(seen, list):
+                return Response({'detail': 'seen_questions must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                progress.seen_questions = list(set(int(x) for x in seen))
+            except (ValueError, TypeError):
+                return Response({'detail': 'seen_questions contains invalid IDs'}, status=status.HTTP_400_BAD_REQUEST)
+
+        progress.save()
+        return Response({
+            'wrong_questions': progress.wrong_questions,
+            'marked_questions': progress.marked_questions,
+            'seen_questions': progress.seen_questions,
+        })
+
 

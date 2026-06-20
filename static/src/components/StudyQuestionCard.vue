@@ -12,6 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggleMarked: [id: number]
+  answered: [payload: { id: number; correct: boolean }]
 }>()
 
 const mediaError = ref(false)
@@ -55,6 +56,8 @@ function isWrongSelected(key: string): boolean {
 function pick(key: AnswerChoice) {
   if (answered.value) return
   selectedAnswer.value = key
+  const correct = key.toUpperCase() === normalizedCorrectAnswer.value
+  emit('answered', { id: props.question.id, correct })
 }
 
 function retry() {

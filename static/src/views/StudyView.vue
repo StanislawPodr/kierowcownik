@@ -7,12 +7,12 @@ import {
   type CategoryMeta,
 } from '../api/questions'
 import StudyQuestionCard from '../components/StudyQuestionCard.vue'
-import { useMarkedQuestions } from '../composables/useMarkedQuestions'
+import { useUserProgress } from '../composables/useUserProgress'
 import type { Question } from '../utils/question'
 
 type Screen = 'loading' | 'ready' | 'empty' | 'error'
 type TypeFilter = 'all' | 'basic' | 'specialist'
-type MarkedFilter = 'all' | 'markedOnly'
+type MarkedFilter = 'all' | 'markedOnly' | 'wrongOnly'
 
 const route = useRoute()
 const cat = computed(() => String(route.params.cat))
@@ -23,55 +23,89 @@ const meta = ref<CategoryMeta | null>(null)
 const currentQuestion = ref<Question | null>(null)
 const offset = ref(0)
 const total = ref(0)
+const unseenTotal = ref(0)
+const nextUnseenOffset = ref<number | null>(null)
 
 const typeFilter = ref<TypeFilter>('all')
 const markedFilter = ref<MarkedFilter>('all')
 const pointsFilter = ref<number | 'all'>('all')
 
-const { marked, isMarked, toggle } = useMarkedQuestions(cat.value)
+const isSaving = ref(false)
+const saveStatus = ref('')
 
-const markedCount = computed(() => marked.value.size)
+const {
+  wrongQuestions,
+  markedQuestions,
+  seenQuestions,
+  isMarked,
+  toggleMarked,
+  markAsWrong,
+  removeFromWrong,
+  markAsSeen,
+  saveProgress,
+} = useUserProgress()
+
+const isUserLoggedIn = computed(() => !!localStorage.getItem('username'))
+const markedCount = computed(() => markedQuestions.value.size)
+const wrongCount = computed(() => wrongQuestions.value.size)
+const seenCount = computed(() => seenQuestions.value.size)
 
 function buildFilters() {
-  const filters: { type?: 'basic' | 'specialist'; points?: number; ids?: number[] } = {}
+  const filters: { type?: 'basic' | 'specialist'; points?: number; ids?: number[]; excludeIds?: number[]; statusFilter?: string } = {}
   if (typeFilter.value !== 'all') filters.type = typeFilter.value
   if (pointsFilter.value !== 'all') filters.points = pointsFilter.value
-  if (markedFilter.value === 'markedOnly') filters.ids = Array.from(marked.value)
+  filters.statusFilter = markedFilter.value
+  
+  if (markedFilter.value === 'markedOnly') {
+    filters.ids = Array.from(markedQuestions.value)
+  } else if (markedFilter.value === 'wrongOnly') {
+    filters.ids = Array.from(wrongQuestions.value)
+  } else {
+    filters.excludeIds = Array.from(seenQuestions.value)
+  }
   return filters
 }
-
 
 async function loadAt(targetOffset: number) {
   screen.value = 'loading'
   errorMsg.value = ''
 
-
-  if (markedFilter.value === 'markedOnly' && marked.value.size === 0) {
+  if (markedFilter.value === 'markedOnly' && markedQuestions.value.size === 0) {
     total.value = 0
+    unseenTotal.value = 0
     currentQuestion.value = null
     offset.value = 0
+    nextUnseenOffset.value = null
+    screen.value = 'empty'
+    return
+  }
+
+  if (markedFilter.value === 'wrongOnly' && wrongQuestions.value.size === 0) {
+    total.value = 0
+    unseenTotal.value = 0
+    currentQuestion.value = null
+    offset.value = 0
+    nextUnseenOffset.value = null
     screen.value = 'empty'
     return
   }
 
   try {
-    const res = await fetchSequentialQuestion(cat.value, Math.max(0, targetOffset), buildFilters())
+    const res = await fetchSequentialQuestion(cat.value, targetOffset, buildFilters())
     total.value = res.total
+    unseenTotal.value = res.unseen_total
 
-    if (res.total === 0) {
+    // If offset was auto-calculated (-1), get the resolved offset from response
+    offset.value = res.offset
+    nextUnseenOffset.value = res.next_unseen_offset
+
+    if (res.question === null) {
       currentQuestion.value = null
-      offset.value = 0
       screen.value = 'empty'
       return
     }
 
-    if (res.question === null) {
-      await loadAt(res.total - 1)
-      return
-    }
-
     currentQuestion.value = res.question
-    offset.value = res.offset
     screen.value = 'ready'
   } catch (e) {
     errorMsg.value = e instanceof Error ? e.message : 'Błąd'
@@ -88,81 +122,147 @@ async function loadMeta() {
 }
 
 function goPrev() {
-  if (offset.value > 0) loadAt(offset.value - 1)
+  if (offset.value > 0) {
+    loadAt(offset.value - 1)
+  }
 }
 
 function goNext() {
-  if (offset.value < total.value - 1) loadAt(offset.value + 1)
+  if (nextUnseenOffset.value !== null) {
+    loadAt(nextUnseenOffset.value)
+  } else if (offset.value < total.value - 1) {
+    // Fallback normal navigation (if not in "all" mode where we skip seen)
+    loadAt(offset.value + 1)
+  }
 }
 
 watch([typeFilter, pointsFilter, markedFilter], () => {
-  loadAt(0)
+  // Pass -1 to automatically find the first unseen question under new filters
+  loadAt(-1)
 })
 
 function onToggleMarked(id: number) {
-  toggle(id)
+  toggleMarked(id)
   if (markedFilter.value === 'markedOnly') {
     loadAt(offset.value)
   }
 }
 
+function onQuestionAnswered({ id, correct }: { id: number; correct: boolean }) {
+  markAsSeen(id)
+  if (correct) {
+    removeFromWrong(id)
+  } else {
+    markAsWrong(id)
+  }
+}
+
+async function handleManualSave() {
+  isSaving.value = true
+  saveStatus.value = 'Zapisywanie...'
+  try {
+    await saveProgress()
+    saveStatus.value = 'Zapisano pomyślnie!'
+    setTimeout(() => {
+      saveStatus.value = ''
+    }, 3000)
+  } catch (err) {
+    saveStatus.value = 'Błąd zapisu.'
+    setTimeout(() => {
+      saveStatus.value = ''
+    }, 3000)
+  } finally {
+    isSaving.value = false
+  }
+}
+
 onMounted(() => {
   loadMeta()
-  loadAt(0)
+  // Load first unseen question on startup
+  loadAt(-1)
 })
 </script>
 
 <template>
   <div class="study-view">
     <header class="study-header">
-      <h1>Tryb nauki — {{ cat }}</h1>
-      <router-link to="/" class="menu-back">Wróć do menu</router-link>
+      <div class="header-left">
+        <h1>Tryb nauki — {{ cat }}</h1>
+        <transition name="fade">
+          <span v-if="saveStatus" class="save-status-msg">{{ saveStatus }}</span>
+        </transition>
+      </div>
+      <div class="header-actions">
+        <button
+          v-if="isUserLoggedIn"
+          type="button"
+          class="btn-save-progress"
+          :disabled="isSaving"
+          @click="handleManualSave"
+        >
+          <span v-if="isSaving" class="mini-spinner"></span>
+          Zapisz postęp
+        </button>
+        <router-link to="/" class="menu-back">Wróć do menu</router-link>
+      </div>
     </header>
 
     <div class="filters">
-      <div class="filter-group">
-        <span class="filter-label">Rodzaj:</span>
-        <button type="button" class="filter-btn" :class="{ active: typeFilter === 'all' }" @click="typeFilter = 'all'">
-          Wszystkie
-        </button>
-        <button type="button" class="filter-btn" :class="{ active: typeFilter === 'basic' }" @click="typeFilter = 'basic'">
-          Podstawowe{{ meta ? ` (${meta.basic_count})` : '' }}
-        </button>
-        <button type="button" class="filter-btn" :class="{ active: typeFilter === 'specialist' }" @click="typeFilter = 'specialist'">
-          Specjalistyczne{{ meta ? ` (${meta.specialist_count})` : '' }}
-        </button>
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">Rodzaj:</span>
+          <button type="button" class="filter-btn" :class="{ active: typeFilter === 'all' }" @click="typeFilter = 'all'">
+            Wszystkie
+          </button>
+          <button type="button" class="filter-btn" :class="{ active: typeFilter === 'basic' }" @click="typeFilter = 'basic'">
+            Podstawowe{{ meta ? ` (${meta.basic_count})` : '' }}
+          </button>
+          <button type="button" class="filter-btn" :class="{ active: typeFilter === 'specialist' }" @click="typeFilter = 'specialist'">
+            Specjalistyczne{{ meta ? ` (${meta.specialist_count})` : '' }}
+          </button>
+        </div>
+
+        <div class="filter-group" v-if="meta && meta.points.length">
+          <span class="filter-label">Punkty:</span>
+          <button type="button" class="filter-btn" :class="{ active: pointsFilter === 'all' }" @click="pointsFilter = 'all'">
+            Wszystkie
+          </button>
+          <button
+            v-for="p in meta.points"
+            :key="p"
+            type="button"
+            class="filter-btn"
+            :class="{ active: pointsFilter === p }"
+            @click="pointsFilter = p"
+          >
+            {{ p }} pkt
+          </button>
+        </div>
       </div>
 
-      <div class="filter-group" v-if="meta && meta.points.length">
-        <span class="filter-label">Punkty:</span>
-        <button type="button" class="filter-btn" :class="{ active: pointsFilter === 'all' }" @click="pointsFilter = 'all'">
-          Wszystkie
-        </button>
-        <button
-          v-for="p in meta.points"
-          :key="p"
-          type="button"
-          class="filter-btn"
-          :class="{ active: pointsFilter === p }"
-          @click="pointsFilter = p"
-        >
-          {{ p }} pkt
-        </button>
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Status:</span>
-        <button type="button" class="filter-btn" :class="{ active: markedFilter === 'all' }" @click="markedFilter = 'all'">
-          Wszystkie
-        </button>
-        <button
-          type="button"
-          class="filter-btn filter-btn--marked"
-          :class="{ active: markedFilter === 'markedOnly' }"
-          @click="markedFilter = 'markedOnly'"
-        >
-          Wymagające nauki ({{ markedCount }})
-        </button>
+      <div class="filter-row filter-row--bottom">
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <button type="button" class="filter-btn" :class="{ active: markedFilter === 'all' }" @click="markedFilter = 'all'">
+            Wszystkie
+          </button>
+          <button
+            type="button"
+            class="filter-btn filter-btn--marked"
+            :class="{ active: markedFilter === 'markedOnly' }"
+            @click="markedFilter = 'markedOnly'"
+          >
+            Wymagające nauki ({{ markedCount }})
+          </button>
+          <button
+            type="button"
+            class="filter-btn filter-btn--wrong"
+            :class="{ active: markedFilter === 'wrongOnly' }"
+            @click="markedFilter = 'wrongOnly'"
+          >
+            Źle odpowiedziane ({{ wrongCount }})
+          </button>
+        </div>
       </div>
     </div>
 
@@ -190,6 +290,7 @@ onMounted(() => {
         :total="total"
         :marked="isMarked(currentQuestion.id)"
         @toggle-marked="onToggleMarked"
+        @answered="onQuestionAnswered"
       />
 
       <div class="nav-bar">
@@ -197,7 +298,7 @@ onMounted(() => {
           ← Poprzednie
         </button>
         <span class="nav-position">{{ offset + 1 }} / {{ total }}</span>
-        <button type="button" class="nav-btn" :disabled="offset >= total - 1" @click="goNext">
+        <button type="button" class="nav-btn" :disabled="nextUnseenOffset === null && offset >= total - 1" @click="goNext">
           Następne →
         </button>
       </div>
@@ -222,11 +323,64 @@ onMounted(() => {
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
  
 .study-header h1 {
   color: #000000;
   font-size: 2.2rem;
   margin: 0;
+}
+
+.save-status-msg {
+  background-color: #2e7d32;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-save-progress {
+  color: #fff;
+  background-color: #1976d2;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-save-progress:hover:not(:disabled) {
+  background-color: #115293;
+}
+
+.btn-save-progress:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.mini-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
 }
  
 .menu-back {
@@ -247,6 +401,19 @@ onMounted(() => {
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
   max-width: 900px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.filter-row--bottom {
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 0.75rem;
 }
  
 .filter-group {
@@ -287,6 +454,21 @@ onMounted(() => {
 .filter-btn--marked.active {
   background-color: #b71c1c;
   border-color: #b71c1c;
+}
+
+.filter-btn--wrong {
+  border-color: #e65100;
+  color: #e65100;
+}
+
+.filter-btn--wrong:hover {
+  background-color: #ffe0b2;
+}
+
+.filter-btn--wrong.active {
+  background-color: #e65100;
+  color: white;
+  border-color: #e65100;
 }
  
 .results-count {
@@ -337,4 +519,14 @@ onMounted(() => {
   text-align: center;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 </style>

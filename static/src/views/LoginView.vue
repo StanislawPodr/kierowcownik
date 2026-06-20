@@ -3,8 +3,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser } from '../api/auth'
 import type { LoginPayload } from '../utils/auth'
+import { useUserProgress } from '../composables/useUserProgress'
 
 const router = useRouter()
+const { loadProgress, saveProgress, clearAll } = useUserProgress()
 
 const username = ref('')
 const password = ref('')
@@ -59,6 +61,8 @@ async function handleLogin() {
     loggedInUser.value = payload.username
     successMsg.value = 'Zalogowano pomyślnie!'
     
+    await loadProgress()
+    
     // Clear inputs
     username.value = ''
     password.value = ''
@@ -89,7 +93,9 @@ async function handleLogin() {
   }
 }
 
-function handleLogout() {
+async function handleLogout() {
+  await saveProgress()
+  clearAll()
   localStorage.removeItem('access_token')
   localStorage.removeItem('refresh_token')
   localStorage.removeItem('username')

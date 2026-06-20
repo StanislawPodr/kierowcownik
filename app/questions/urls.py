@@ -9,7 +9,8 @@ from .views import (
     RandomQuestionsView,
     CategoryQuestionsMetaView, 
     CategoryQuestionSequentialView, 
-    CategoryQuestionsView
+    CategoryQuestionsView,
+    UserProgressView
 )
 
 urlpatterns = [
@@ -32,5 +33,6 @@ urlpatterns = [
     ),
     path('category/<str:symbol>/meta/', CategoryQuestionsMetaView.as_view()),
     path('category/<str:symbol>/sequential/', CategoryQuestionSequentialView.as_view()),
-    path('category/<str:symbol>/', CategoryQuestionsView.as_view())
+    path('category/<str:symbol>/', CategoryQuestionsView.as_view()),
+    path('progress/', UserProgressView.as_view(), name='user-progress'),
 ]

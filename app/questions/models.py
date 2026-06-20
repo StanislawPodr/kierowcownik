@@ -38,3 +38,21 @@ class Question(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     __str__ = lambda self: self.question_text
+
+
+from django.conf import settings
+
+class UserProgress(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='progress'
+    )
+    wrong_questions = models.JSONField(default=list, blank=True)
+    marked_questions = models.JSONField(default=list, blank=True)
+    seen_questions = models.JSONField(default=list, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Progress of {self.user.username}"
+

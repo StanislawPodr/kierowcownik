@@ -16,11 +16,13 @@ const props = defineProps<{
   index: number
   total: number
   modelValue: AnswerChoice | null
+  marked: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: AnswerChoice]
   next: []
+  toggleMarked: [id: number]
 }>()
 
 const mediaError = ref(false)
@@ -303,8 +305,39 @@ watch(
       </div>
 
       <div class="actions">
+        <button
+          type="button"
+          class="mark-toggle"
+          :class="{ 'mark-toggle--active': marked }"
+          @click="emit('toggleMarked', question.id)"
+        >
+          {{ marked ? 'Usuń z listy do nauki' : 'Oznacz jako wymagające nauki' }}
+        </button>
         <button type="button" class="primary" :disabled="!canGoNext" @click="goNext">Przejdź do następnego pytania</button>
       </div>
     </footer>
   </article>
 </template>
+
+<style scoped>
+.mark-toggle {
+  border: 2px solid #e53935;
+  background: transparent;
+  color: #e53935;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mark-toggle:hover {
+  background-color: #e53935;
+  color: #fff;
+}
+
+.mark-toggle--active {
+  background-color: #e53935;
+  color: #fff;
+}
+</style>
