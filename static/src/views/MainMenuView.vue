@@ -42,7 +42,7 @@
         </div>
 
         <router-link to="/statystyki" class="menu-btn">Statystyki</router-link>
-<<<<<<< HEAD
+
 
         <div ref="sekcjaNaukiRef" class="action-group" :class="{ 'z-index-top': czyListaNaukaOtwarta }">
           <router-link 
@@ -74,10 +74,9 @@
             </div>
           </div>
         </div>
-=======
+
         <router-link to="/rejestracja" class="menu-btn">Rejestracja</router-link>
         <router-link to="/logowanie" class="menu-btn">Logowanie</router-link>
->>>>>>> 939135e0598d307f0d02fe28b1d7fc3a96a827b6
       </nav>
 
       <div class="side-image right">
