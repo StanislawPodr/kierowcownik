@@ -5,6 +5,7 @@ import ExamResult from '../components/ExamResult.vue'
 import QuestionCard from '../components/QuestionCard.vue'
 import { calculateScore } from '../utils/examScore'
 import type { AnswerChoice, Question } from '../utils/question'
+import {useRoute} from "vue-router";
 
 type Screen = 'loading' | 'exam' | 'result' | 'error'
 
@@ -13,7 +14,7 @@ const errorMsg = ref('')
 const questions = ref<Question[]>([])
 const answers = ref<(AnswerChoice | null)[]>([])
 const index = ref(0)
-
+const route = useRoute()
 const result = computed(() =>
   screen.value === 'result' ? calculateScore(questions.value, answers.value) : null,
 )
@@ -22,7 +23,7 @@ async function startExam() {
   screen.value = 'loading'
   errorMsg.value = ''
   try {
-    const data = await fetchWordExam()
+    const data = await fetchWordExam(route.params.cat)
     if (!data.questions.length) throw new Error('Brak pytań w bazie')
     questions.value = data.questions
     answers.value = data.questions.map(() => null)
