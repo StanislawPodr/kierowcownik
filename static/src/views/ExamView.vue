@@ -66,6 +66,8 @@ onMounted(() => {
   <ExamResult
     v-else-if="screen === 'result' && result"
     :result="result"
+    :questions="questions"
+    :answers="answers"
     @restart="startExam"
   />
 
