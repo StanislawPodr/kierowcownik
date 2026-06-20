@@ -44,6 +44,8 @@
         </div>
 
         <router-link to="/statystyki" class="menu-btn">Statystyki</router-link>
+        <router-link to="/rejestracja" class="menu-btn">Rejestracja</router-link>
+        <router-link to="/logowanie" class="menu-btn">Logowanie</router-link>
       </nav>
 
       <div class="side-image right">

@@ -8,10 +8,10 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 5173,
+    port: 80,
     proxy: {
-      '/api': 'http://127.0.0.1:8000',
-      '/resources': 'http://127.0.0.1:8000',
+      '/api': 'http://127.0.0.1:80/api',
+      '/resources': 'http://127.0.0.1:80/media',
     },
   },
 })
