@@ -11,9 +11,8 @@ from .serializers import (
     ExamAttemptSerializer,
     QuestionSerializer,
 )
+from .utils import _generate_exam_questions
 
-BASIC_COUNT = 20
-SPECIALIST_COUNT = 12
 
 def _sample_questions(queryset, count):
     """
@@ -40,20 +39,12 @@ class WordExamView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        base_qs = Question.objects.filter(category=category_b)
-
-        basic_qs = base_qs.filter(is_basic=True)
-        specialist_qs = base_qs.filter(is_basic=False)
-
-        basic_questions = list(_sample_questions(basic_qs, BASIC_COUNT))
-        specialist_questions = list(_sample_questions(specialist_qs, SPECIALIST_COUNT))
-
-        all_questions = basic_questions + specialist_questions
+        all_questions = _generate_exam_questions(category_b)
 
         return Response({
             'category': 'B',
-            'basic_count': len(basic_questions),
-            'specialist_count': len(specialist_questions),
+            'basic_count': len([q for q in all_questions if q.is_basic]),
+            'specialist_count': len([q for q in all_questions if not q.is_basic]),
             'total': len(all_questions),
             'questions': QuestionSerializer(all_questions, many=True).data,
         })
@@ -64,27 +55,19 @@ class CategoryExamView(APIView):
     GET /api/questions/exam/category/<symbol>/
 
     Zwraca losowy test z podanej kategorii:
-    20 pytań podstawowych + 12 specjalistycznych (lub mniej, jeśli baza nie ma tylu).
+    20 pytań podstawowych + 12 specjalistycznych zgodnie ze strukturą punktową WORD.
     """
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, symbol):
         category = get_object_or_404(Categories, symbol__iexact=symbol)
 
-        base_qs = Question.objects.filter(category=category)
-
-        basic_qs = base_qs.filter(is_basic=True)
-        specialist_qs = base_qs.filter(is_basic=False)
-
-        basic_questions = list(_sample_questions(basic_qs, BASIC_COUNT))
-        specialist_questions = list(_sample_questions(specialist_qs, SPECIALIST_COUNT))
-
-        all_questions = basic_questions + specialist_questions
+        all_questions = _generate_exam_questions(category)
 
         return Response({
             'category': category.symbol,
-            'basic_count': len(basic_questions),
-            'specialist_count': len(specialist_questions),
+            'basic_count': len([q for q in all_questions if q.is_basic]),
+            'specialist_count': len([q for q in all_questions if not q.is_basic]),
             'total': len(all_questions),
             'questions': QuestionSerializer(all_questions, many=True).data,
         })
