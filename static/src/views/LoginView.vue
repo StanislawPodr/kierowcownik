@@ -105,144 +105,153 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <header class="card-header">
-        <h1 class="title">LOGOWANIE</h1>
-        <p class="subtitle">Zaloguj się do portalu Kierowcownik</p>
-      </header>
+  <div class="main-menu">
+    <header class="menu-header">
+      <h1>LOGOWANIE</h1>
+      <p class="menu-user subtitle">Zaloguj się do portalu Kierowcownik</p>
+    </header>
 
-      <!-- Already logged in view -->
-      <div v-if="loggedInUser" class="success-alert">
-        <div class="alert-icon">✓</div>
-        <div class="alert-content">
-          <h3>Zalogowano!</h3>
-          <p>Jesteś zalogowany jako: <strong>{{ loggedInUser }}</strong></p>
+    <div class="content-wrapper">
+      <div class="menu-actions">
+        <div v-if="loggedInUser" class="success-alert">
+          <div class="alert-icon">✓</div>
+          <div class="alert-content">
+            <h3>Zalogowano!</h3>
+            <p>Jesteś zalogowany jako: <strong>{{ loggedInUser }}</strong></p>
+          </div>
+          <div class="alert-actions">
+            <router-link to="/" class="menu-btn">
+              Menu główne
+            </router-link>
+            <button @click="handleLogout" class="menu-btn logout-btn">
+              Wyloguj się
+            </button>
+          </div>
         </div>
-        <div class="alert-actions">
-          <router-link to="/" class="btn-primary back-to-menu-btn">
-            Przejdź do menu głównego
-          </router-link>
-          <button @click="handleLogout" class="btn-secondary logout-btn">
-            Wyloguj się
-          </button>
-        </div>
+
+        <form v-else @submit.prevent="handleLogin" class="login-form">
+          <div v-if="errors.non_field_errors.length > 0" class="error-alert">
+            <ul>
+              <li v-for="(err, idx) in errors.non_field_errors" :key="idx">{{ err }}</li>
+            </ul>
+          </div>
+
+          <div class="form-group">
+            <label for="username">Nazwa użytkownika</label>
+            <div class="input-wrapper">
+              <input
+                id="username"
+                v-model="username"
+                type="text"
+                placeholder="Wprowadź swoją nazwę"
+                required
+                :disabled="isSubmitting"
+                class="menu-input"
+                :class="{ 'has-error': errors.username.length > 0 }"
+              />
+            </div>
+            <span v-for="(err, idx) in errors.username" :key="idx" class="field-error">
+              {{ err }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Hasło</label>
+            <div class="input-wrapper">
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                placeholder="Wprowadź hasło"
+                required
+                :disabled="isSubmitting"
+                class="menu-input"
+                :class="{ 'has-error': errors.password.length > 0 }"
+              />
+            </div>
+            <span v-for="(err, idx) in errors.password" :key="idx" class="field-error">
+              {{ err }}
+            </span>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="menu-btn"
+              :disabled="!isFormValid || isSubmitting"
+            >
+              <span v-if="isSubmitting" class="spinner"></span>
+              <span v-else>Zaloguj się</span>
+            </button>
+
+            <router-link to="/" class="menu-btn secondary-btn">
+              Wróć do menu
+            </router-link>
+          </div>
+        </form>
       </div>
-
-      <!-- Main form view -->
-      <form v-else @submit.prevent="handleLogin" class="login-form">
-        <!-- General errors -->
-        <div v-if="errors.non_field_errors.length > 0" class="error-alert">
-          <ul>
-            <li v-for="(err, idx) in errors.non_field_errors" :key="idx">{{ err }}</li>
-          </ul>
-        </div>
-
-        <!-- Username Input -->
-        <div class="form-group">
-          <label for="username">Nazwa użytkownika</label>
-          <div class="input-wrapper">
-            <input
-              id="username"
-              v-model="username"
-              type="text"
-              placeholder="Wprowadź swoją nazwę"
-              required
-              :disabled="isSubmitting"
-              :class="{ 'has-error': errors.username.length > 0 }"
-            />
-          </div>
-          <span v-for="(err, idx) in errors.username" :key="idx" class="field-error">
-            {{ err }}
-          </span>
-        </div>
-
-        <!-- Password Input -->
-        <div class="form-group">
-          <label for="password">Hasło</label>
-          <div class="input-wrapper">
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              placeholder="Wprowadź hasło"
-              required
-              :disabled="isSubmitting"
-              :class="{ 'has-error': errors.password.length > 0 }"
-            />
-          </div>
-          <span v-for="(err, idx) in errors.password" :key="idx" class="field-error">
-            {{ err }}
-          </span>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button
-            type="submit"
-            class="btn-primary submit-btn"
-            :disabled="!isFormValid || isSubmitting"
-          >
-            <span v-if="isSubmitting" class="spinner"></span>
-            <span v-else>Zaloguj się</span>
-          </button>
-          
-          <router-link to="/" class="btn-secondary back-btn">
-            Wróć do menu
-          </router-link>
-        </div>
-      </form>
     </div>
   </div>
 </template>
 
 <style scoped>
-.login-container {
+/* --- STYLIZACJA BAZOWA SKOPIOWANA Z MAIN MENU --- */
+.main-menu {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  min-height: calc(100vh - 32px);
-  width: 100%;
-  padding: 1rem;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  padding: 2.5rem;
-  transition: transform 0.3s ease;
-}
-
-.card-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.title {
+  padding: 2rem;
   font-family: Arial, sans-serif;
-  color: #1a1a1a;
-  font-size: 2.5rem;
-  font-weight: 900;
-  margin: 0 0 0.5rem;
-  letter-spacing: 1px;
+  background-color: #615d5d;
+  background-image: repeating-linear-gradient(
+      45deg,
+      #434242,
+      #434242 10px,
+      #615d5d 10px,
+      #615d5d 20px
+  );
+  min-height: 100vh;
+  width: 100%;
 }
 
-.subtitle {
-  color: #666;
-  font-size: 1rem;
-  margin: 0;
+.menu-header h1 {
+  color: #000000;
+  margin-bottom: 0.5rem;
+  font-size: 5rem;
+  text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
+  text-align: center;
 }
 
-/* Forms and Inputs styling */
+.menu-user.subtitle {
+  color: #fff;
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 450px;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
+  width: 100%;
 }
 
 .form-group {
@@ -252,81 +261,86 @@ async function handleLogout() {
 }
 
 .form-group label {
-  color: #333;
-  font-size: 0.95rem;
-  font-weight: 600;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: bold;
   text-align: left;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  margin-left: 4px;
 }
 
 .input-wrapper {
   position: relative;
-}
-
-.input-wrapper input {
   width: 100%;
-  padding: 12px 16px;
+}
+
+/* Pola tekstowe w stylu menu-select */
+.menu-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 24px;
   border-radius: 8px;
-  border: 2px solid #ccc;
-  font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: #fff;
-  color: #1a1a1a;
-}
-
-.input-wrapper input:focus {
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #ffffff;
+  color: #333;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
   outline: none;
-  border-color: #e53935;
-  box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.15);
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
 }
 
-.input-wrapper input.has-error {
-  border-color: #d32f2f;
+.menu-input:focus {
+  box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.4);
 }
 
-.input-wrapper input.has-error:focus {
-  box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.15);
+.menu-input.has-error {
+  border: 2px solid #e53935;
 }
 
-/* Warnings and errors */
+/* --- OSTRZEŻENIA I BŁĘDY --- */
 .field-error {
-  color: #d32f2f;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-top: 2px;
+  color: #ff8a80; /* Jasny czerwony by był widoczny na szarym tle */
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-top: 4px;
   text-align: left;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .error-alert {
-  background: #fde8e8;
-  border-left: 4px solid #e53935;
-  border-radius: 6px;
-  padding: 10px 16px;
-  margin-bottom: 1rem;
+  background: #ffffff;
+  border-left: 6px solid #e53935;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
 .error-alert ul {
   margin: 0;
   padding-left: 20px;
-  color: #9b1c1c;
-  font-size: 0.9rem;
+  color: #b71c1c;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
+/* --- KOMUNIKAT ZALOGOWANIA --- */
 .success-alert {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: #def7ec;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: 8px;
   padding: 2rem;
-  border: 1px solid #bcf0da;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
 .alert-icon {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #31c48d;
+  background-color: #42b983; /* Zielony w stylu Vue */
   color: white;
   display: flex;
   align-items: center;
@@ -337,98 +351,77 @@ async function handleLogout() {
 }
 
 .alert-content h3 {
-  color: #03543f;
+  color: #1a1a1a;
   margin: 0 0 0.5rem;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: bold;
 }
 
 .alert-content p {
-  color: #046c4e;
+  color: #333;
   margin: 0 0 2rem;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .alert-actions {
   display: flex;
   flex-direction: column;
   width: 100%;
-  align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-/* Buttons styling */
 .form-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
-.btn-primary {
+.menu-btn {
   width: 100%;
-  padding: 14px;
-  background-color: #e53935;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.15rem;
-  font-weight: bold;
-  cursor: pointer;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  padding: 16px 24px;
+  background-color: #e53935;
+  color: white;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.5rem;
   transition: background-color 0.2s ease, transform 0.1s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-  text-decoration: none;
-  text-align: center;
 }
 
-.btn-primary:hover:not(:disabled) {
+.menu-btn:hover:not(:disabled) {
   background-color: #b71c1c;
 }
 
-.btn-primary:active:not(:disabled) {
-  transform: translateY(1px);
+.menu-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #a0a0a0;
+.menu-btn:disabled {
+  background-color: #8c8c8c;
+  color: #d1d1d1;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-.btn-secondary {
-  width: 100%;
-  padding: 12px;
-  background-color: transparent;
-  color: #4a4a4a;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  font-size: 1.05rem;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
-  text-align: center;
-  transition: all 0.2s ease;
+.secondary-btn {
+  background-color: #434242;
+  border: 2px solid #ffffff;
 }
 
-.btn-secondary:hover {
-  background-color: #f0f0f0;
-  color: #1a1a1a;
-  border-color: #888;
+.secondary-btn:hover {
+  background-color: #2c2c2c;
 }
 
-.back-to-menu-btn {
-  margin-top: 1rem;
-  max-width: 300px;
-}
-
-.logout-btn {
-  max-width: 300px;
-}
-
-/* Spinner */
 .spinner {
   width: 24px;
   height: 24px;
