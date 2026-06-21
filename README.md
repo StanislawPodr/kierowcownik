@@ -44,6 +44,8 @@ python manage.py add_resources "plik.zip" "plik.zip" ...
 ```
 
 Dodając flagę --reset usuwane są stare dane przed dodaniem nowych.
+
+## Docker
 Dla ułatwienia jest gotowy obraz dockera. Plik compose.yaml zawiera gotową konfigurację. Po zbudowaniu:
 ```bash
 npm run build
