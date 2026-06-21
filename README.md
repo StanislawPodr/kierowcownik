@@ -44,3 +44,12 @@ python manage.py add_resources "plik.zip" "plik.zip" ...
 ```
 
 Dodając flagę --reset usuwane są stare dane przed dodaniem nowych.
+Dla ułatwienia jest gotowy obraz dockera. Plik compose.yaml zawiera gotową konfigurację. Po zbudowaniu:
+```bash
+npm run build
+```
+można odpalić aplikację za pomocą:
+```bash
+docker compose up
+```
+W razie potrzeby można oczywiście edytować plik compose. Ponadto sam szkielet aplikacji django ma swój własny obraz, który jest możliwy do zbudowania. Dockerfile znajduje się w katalogu app/
