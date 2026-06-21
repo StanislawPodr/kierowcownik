@@ -34,13 +34,6 @@ GET     '/api/questions/categories/'
 
 Szczegóły JSON: docs/api-contract.md
 
-## Testy
-
-```bash
-cd app
-python3 manage.py test accounts
-```
-
 ## Dane
 Link do strony z danymi: https://www.gov.pl/web/infrastruktura/prawo-jazdy 
 
