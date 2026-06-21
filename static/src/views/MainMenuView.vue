@@ -2,10 +2,7 @@
   <div class="main-menu">
     <header class="menu-header">
       <h1>KIEROWCOWNIK</h1>
-      <p v-if="loggedInUser" class="menu-user">
-        Zalogowany: <strong>{{ loggedInUser }}</strong>
-        <button type="button" class="menu-logout-btn" @click="handleLogout">Wyloguj</button>
-      </p>
+
     </header>
 
     <div class="content-wrapper">
@@ -45,29 +42,27 @@
           </div>
         </div>
 
-        <router-link to="/statystyki" class="menu-btn">Statystyki</router-link>
-
 
         <div ref="sekcjaNaukiRef" class="action-group" :class="{ 'z-index-top': czyListaNaukaOtwarta }">
-          <router-link 
-              :to="`/nauka/${wybranaKategoriaNauka}`" 
+          <router-link
+              :to="`/nauka/${wybranaKategoriaNauka}`"
               class="menu-btn start-btn"
           >
             Tryb nauki
           </router-link>
-          
+
           <div class="custom-select-wrapper">
-            <button 
-                @click="toggleListaNauka" 
-                class="menu-select-btn" 
+            <button
+                @click="toggleListaNauka"
+                class="menu-select-btn"
                 type="button"
             >
               {{ wybranaKategoriaNauka }}
             </button>
-            
+
             <div v-if="czyListaNaukaOtwarta" class="custom-dropdown">
-              <div 
-                  v-for="opcja in listaOpcji" 
+              <div
+                  v-for="opcja in listaOpcji"
                   :key="opcja.id"
                   @click="wybierzNauke(opcja.symbol)"
                   class="dropdown-item"
@@ -78,28 +73,39 @@
             </div>
           </div>
         </div>
-
+        <router-link to="/statystyki" class="menu-btn">Statystyki</router-link>
         <router-link v-if="!loggedInUser" to="/rejestracja" class="menu-btn">Rejestracja</router-link>
         <router-link v-if="!loggedInUser" to="/logowanie" class="menu-btn">Logowanie</router-link>
+
+
       </nav>
+
 
       <div class="side-image right">
         <img :src="rightImage" alt="Dekoracja prawa"/>
       </div>
+
     </div>
+    <div class="logged-display">
+      <p v-if="loggedInUser" class="menu-user">
+        Zalogowany: <strong>{{ loggedInUser }}</strong>
+        <button type="button" class="menu-logout-btn" @click="handleLogout">Wyloguj</button>
+      </p>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import {ref, onMounted} from 'vue'
 import leftImage from '../assets/znak-nauki-jazdy.png'
 import rightImage from '../assets/kolo-zebate.png'
 
-import { fetchCategories } from "../api/categories";
-import { Categories } from "../utils/categories";
-import { useUserProgress } from '../composables/useUserProgress'
+import {fetchCategories} from "../api/categories";
+import {Categories} from "../utils/categories";
+import {useUserProgress} from '../composables/useUserProgress'
 
-const { saveProgress, clearAll } = useUserProgress()
+const {saveProgress, clearAll} = useUserProgress()
 
 const listaOpcji = ref<Categories[]>([])
 const loggedInUser = ref<string | null>(null)
@@ -158,6 +164,7 @@ onMounted(async () => {
 <style scoped>
 
 .main-menu {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -182,11 +189,16 @@ onMounted(async () => {
   text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
 }
 
+.logged-display{
+  position: absolute;
+  top: 30px;
+  right: 20px;
+}
+
 .menu-user {
   margin: -1rem 0 1.5rem;
-  color: #fff;
-  font-size: 1.1rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 1.3rem;
 }
 
 .menu-logout-btn {
@@ -194,15 +206,16 @@ onMounted(async () => {
   padding: 6px 14px;
   font-size: 0.95rem;
   font-weight: bold;
-  border: 2px solid #fff;
+  border: transparent;
   border-radius: 6px;
-  background: transparent;
-  color: #fff;
+  background-color: #e53935;
+  color: white;
   cursor: pointer;
 }
 
+
 .menu-logout-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #b71c1c;
 }
 
 .content-wrapper {
@@ -234,8 +247,12 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .menu-actions {
@@ -249,7 +266,7 @@ onMounted(async () => {
 .action-group {
   position: relative;
   width: 100%;
-  z-index: 1; 
+  z-index: 1;
 }
 
 .z-index-top {
@@ -278,9 +295,18 @@ onMounted(async () => {
   padding: 16px 24px !important;
 }
 
-.menu-btn:hover { background-color: #b71c1c; }
-.menu-btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-.menu-btn.router-link-active { background-color: #b71c1c; }
+.menu-btn:hover {
+  background-color: #b71c1c;
+}
+
+.menu-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-btn.router-link-active {
+  background-color: #b71c1c;
+}
 
 .custom-select-wrapper {
   position: absolute;
@@ -321,7 +347,7 @@ onMounted(async () => {
   padding: 8px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 
-  z-index: 1001; 
+  z-index: 1001;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
