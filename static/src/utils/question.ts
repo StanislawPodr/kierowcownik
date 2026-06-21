@@ -14,7 +14,7 @@ export interface Question {
 
 export type AnswerChoice = 'A' | 'B' | 'C' | 'T' | 'N'
 
-export function isAbc(question: Question): boolean {''
+export function isAbc(question: Question): boolean {
   return [question.answer_A, question.answer_B, question.answer_C].some(
     (t) => String(t || '').trim() !== '',
   )
@@ -30,4 +30,14 @@ export function getBasicTiming() {
 
 export function getSpecialistTiming() {
   return { total: 50 }
+}
+
+export type AnswerStatus = 'correct' | 'wrong' | 'unanswered'
+
+export function getAnswerStatus(
+  question: Question,
+  answer: AnswerChoice | null,
+): AnswerStatus {
+  if (answer === null) return 'unanswered'
+  return answer === question.correct_answer ? 'correct' : 'wrong'
 }

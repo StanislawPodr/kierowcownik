@@ -56,3 +56,29 @@ class UserProgress(models.Model):
     def __str__(self):
         return f"Progress of {self.user.username}"
 
+
+class ExamAttempt(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='exam_attempts',
+    )
+    category = models.ForeignKey(
+        Categories,
+        on_delete=models.CASCADE,
+        related_name='exam_attempts',
+    )
+    score = models.PositiveSmallIntegerField()
+    max_score = models.PositiveSmallIntegerField()
+    passed = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at'], name='questions_e_user_id_6a8f0d_idx'),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} — {self.category.symbol}: {self.score}/{self.max_score}"
+

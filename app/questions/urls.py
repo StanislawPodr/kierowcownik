@@ -10,7 +10,9 @@ from .views import (
     CategoryQuestionsMetaView, 
     CategoryQuestionSequentialView, 
     CategoryQuestionsView,
-    UserProgressView
+    UserProgressView,
+    ExamAttemptListCreateView,
+    ExamAttemptStatsView,
 )
 
 urlpatterns = [
@@ -35,4 +37,6 @@ urlpatterns = [
     path('category/<str:symbol>/sequential/', CategoryQuestionSequentialView.as_view()),
     path('category/<str:symbol>/', CategoryQuestionsView.as_view()),
     path('progress/', UserProgressView.as_view(), name='user-progress'),
+    path('exam-attempts/stats/', ExamAttemptStatsView.as_view(), name='exam-attempts-stats'),
+    path('exam-attempts/', ExamAttemptListCreateView.as_view(), name='exam-attempts'),
 ]

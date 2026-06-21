@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { submitExamAttempt } from '../api/examAttempts'
 import { fetchWordExam } from '../api/questions'
 import ExamResult from '../components/ExamResult.vue'
 import QuestionCard from '../components/QuestionCard.vue'
@@ -61,6 +62,17 @@ async function finishExam() {
   })
 
   await saveProgress()
+
+  const examResult = calculateScore(questions.value, answers.value)
+  if (localStorage.getItem('access_token')) {
+    submitExamAttempt({
+      category: String(route.params.cat),
+      score: examResult.score,
+      max_score: examResult.maxScore,
+      passed: examResult.passed,
+    }).catch(() => {})
+  }
+
   screen.value = 'result'
 }
 
@@ -87,6 +99,8 @@ onMounted(() => {
   <ExamResult
     v-else-if="screen === 'result' && result"
     :result="result"
+    :questions="questions"
+    :answers="answers"
     @restart="startExam"
   />
 

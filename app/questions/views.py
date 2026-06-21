@@ -1,10 +1,16 @@
+from django.db.models import Avg, Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Categories, Question, UserProgress
-from .serializers import QuestionSerializer
+from .models import Categories, ExamAttempt, Question, UserProgress
+from .serializers import (
+    EXAM_MAX_POINTS,
+    ExamAttemptCreateSerializer,
+    ExamAttemptSerializer,
+    QuestionSerializer,
+)
 
 BASIC_COUNT = 20
 SPECIALIST_COUNT = 12
@@ -380,4 +386,57 @@ class UserProgressView(APIView):
             'seen_questions': progress.seen_questions,
         })
 
+
+class ExamAttemptListCreateView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        qs = ExamAttempt.objects.filter(user=request.user).select_related('category')
+        category = request.query_params.get('category')
+        if category:
+            qs = qs.filter(category__symbol__iexact=category.strip())
+        serializer = ExamAttemptSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ExamAttemptCreateSerializer(
+            data=request.data,
+            context={'request': request},
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        attempt = serializer.save()
+        return Response(
+            ExamAttemptSerializer(attempt).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ExamAttemptStatsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        qs = ExamAttempt.objects.filter(user=request.user)
+        category = request.query_params.get('category')
+        if category:
+            qs = qs.filter(category__symbol__iexact=category.strip())
+        agg = qs.aggregate(
+            total_attempts=Count('id'),
+            passed_count=Count('id', filter=Q(passed=True)),
+            avg_score=Avg('score'),
+        )
+        last = qs.select_related('category').first()
+        total = agg['total_attempts'] or 0
+        passed = agg['passed_count'] or 0
+        avg_score = agg['avg_score']
+        avg_score_rounded = round(avg_score, 1) if avg_score is not None else 0
+        avg_percent = round((avg_score / EXAM_MAX_POINTS) * 100) if avg_score is not None else 0
+        return Response({
+            'total_attempts': total,
+            'passed_count': passed,
+            'pass_rate': round((passed / total) * 100) if total else 0,
+            'avg_score': avg_score_rounded,
+            'avg_percent': avg_percent,
+            'last_attempt': ExamAttemptSerializer(last).data if last else None,
+        })
 

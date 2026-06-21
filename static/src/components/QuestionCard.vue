@@ -281,9 +281,9 @@ watch(
         </button>
         <button
           type="button"
-          :class="{ selected: modelValue === 'F' }"
+          :class="{ selected: modelValue === 'N' }"
           :disabled="!canAnswer"
-          @click="pick('F')"
+          @click="pick('N')"
         >
           NIE
         </button>

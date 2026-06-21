@@ -2,6 +2,10 @@
   <div class="main-menu">
     <header class="menu-header">
       <h1>KIEROWCOWNIK</h1>
+      <p v-if="loggedInUser" class="menu-user">
+        Zalogowany: <strong>{{ loggedInUser }}</strong>
+        <button type="button" class="menu-logout-btn" @click="handleLogout">Wyloguj</button>
+      </p>
     </header>
 
     <div class="content-wrapper">
@@ -75,8 +79,8 @@
           </div>
         </div>
 
-        <router-link to="/rejestracja" class="menu-btn">Rejestracja</router-link>
-        <router-link to="/logowanie" class="menu-btn">Logowanie</router-link>
+        <router-link v-if="!loggedInUser" to="/rejestracja" class="menu-btn">Rejestracja</router-link>
+        <router-link v-if="!loggedInUser" to="/logowanie" class="menu-btn">Logowanie</router-link>
       </nav>
 
       <div class="side-image right">
@@ -93,8 +97,12 @@ import rightImage from '../assets/kolo-zebate.png'
 
 import { fetchCategories } from "../api/categories";
 import { Categories } from "../utils/categories";
+import { useUserProgress } from '../composables/useUserProgress'
+
+const { saveProgress, clearAll } = useUserProgress()
 
 const listaOpcji = ref<Categories[]>([])
+const loggedInUser = ref<string | null>(null)
 
 const wybranaKategoriaEgzamin = ref<string>('')
 const wybranaKategoriaNauka = ref<string>('')
@@ -123,8 +131,18 @@ function wybierzNauke(symbol: string) {
   czyListaNaukaOtwarta.value = false
 }
 
+async function handleLogout() {
+  await saveProgress()
+  clearAll()
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('username')
+  loggedInUser.value = null
+}
+
 
 onMounted(async () => {
+  loggedInUser.value = localStorage.getItem('username')
   try {
     listaOpcji.value = await fetchCategories()
     if (listaOpcji.value.length > 0) {
@@ -162,6 +180,29 @@ onMounted(async () => {
   margin-bottom: 2rem;
   font-size: 5rem;
   text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
+}
+
+.menu-user {
+  margin: -1rem 0 1.5rem;
+  color: #fff;
+  font-size: 1.1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.menu-logout-btn {
+  margin-left: 12px;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.menu-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .content-wrapper {
